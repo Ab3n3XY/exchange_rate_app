@@ -1,0 +1,36 @@
+{% block content %}
+  <h1>Exchange Rates</h1>
+  <table>
+    <thead class="bg-gray-900 flex text-white w-full">
+        <tr class="flex w-full mb-4">
+            <th scope="col" class="p-4 w-1/5 pl-8 py-3 text-left text-xs font-medium text-yellow-400 uppercase">
+                Currency
+            </th>
+            <th scope="col" class="p-4 w-1/5 py-3 text-center text-xs font-medium text-yellow-400 uppercase">
+                Cash Buying
+            </th>
+            <th scope="col" class="p-4 w-1/5 py-3 text-center text-xs font-medium text-yellow-400 uppercase">
+                Cash Selling
+            </th>
+            <th scope="col" class="p-4 w-1/5 py-3 text-center text-xs font-medium text-yellow-400 uppercase">
+                Transactional Buying
+            </th>
+            <th scope="col" class="p-4 w-1/5 py-3 text-center text-xs font-medium text-yellow-400 uppercase">
+                Transactional Selling
+            </th>
+        </tr>
+    </thead>
+    <tbody class="bg-white flex flex-col items-center justify-between overflow-y-scroll w-full">
+        {% for rate in exchange_rates %}
+        <tr class="flex w-full -mb-3">
+            <td class="pl-8 py-4 p-4 w-1/5">{{ rate.currency }}</td>
+            <td class="py-4 p-4 w-1/5 text-center">{{ rate.buying_rate }}</td>
+            <td class="py-4 p-4 w-1/5 text-center">{{ rate.selling_rate }}</td>
+            <td class="py-4 p-4 w-1/5 text-center">{{ rate.transactional_buying_rate }}</td>
+            <td class="py-4 p-4 w-1/5 text-center">{{ rate.transactional_selling_rate }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    
+  </table>
+{% endblock %}
