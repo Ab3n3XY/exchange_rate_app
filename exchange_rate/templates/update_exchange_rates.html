@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Update Exchange Rates</title>
+<style>
+  body {
+    background-color: #121212;
+    color: #ffffff;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .container {
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 600px;
+    margin: auto;
+  }
+  .form-control, .btn-primary {
+    background-color: #2e2e2e;
+    color: #ffffff;
+    border: 1px solid #444;
+    font-size: 10px;
+  }
+  .table {
+    color: #ffffff;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .table th, .table td {
+    border-color: #444;
+  }
+  .btn-primary {
+    font-weight: bold;
+    width: 100%;
+  }
+  @media (min-width: 768px) {
+    .btn-primary {
+      width: auto;
+    }
+    .table th, .table td {
+    font-size: 12px;
+    }
+    .option-updated {
+  color: #28a745;
+}
+  }
+  
+  /* Ensure mobile-specific styling for dropdown options */
+  @media (max-width: 767px) {
+    /* Target option elements within the select with the class 'option-updated' */
+    select#bank option.option-updated {
+      color: green !important; /* Set color to green for updated banks */
+      background-color: white !important; /* Set background color to white */
+    }
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  .alert {
+    margin-top: 20px;
+  }
+  .alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+  }
+  .alert-error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+  }
+  .btn-primary {
+  /* Existing styles */
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #3a3a3a;
+  cursor: pointer;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.option-updated {
+  color: green;
+}
+</style>
+
+<div class="container text-size-md items-center text-center justify-items-center">
+  {% if success %}
+    <div class="alert alert-success">Exchange rates updated successfully!</div>
+  {% elif form.errors %}
+    <div class="alert alert-error">There was an error updating the exchange rates.</div>
+  {% endif %}
+  <form id="exchange-rate-form" method="post" action="{% url 'update_exchange_rates' %}">
+    {% csrf_token %}
+    <div class="form-group" style="font-size: small; padding-bottom: 10px;">
+      <label for="date">Date</label>
+      <input type="date" id="date" name="date" class="form-control" value="{{ today }}">
+    </div>
+    <div class="form-group" style="font-size: small; padding-bottom: 10px;">
+      <label for="bank">Bank</label>
+      <select id="bank" name="bank" class="form-control">
+        {% with banks|dictsort:"updated_for_today" as sorted_banks %}
+          {% for bank in sorted_banks %}
+            <option value="{{ bank.id }}">
+              {% if bank.updated_for_today %}
+                ★
+              {% endif %}
+              {{ bank.name }}
+            </option>
+          {% endfor %}
+        {% endwith %}
+      </select>
+    </div>
+    <table class="table" style="font-size: small; width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th style="width: 20%;">Currency</th>
+          <th style="width: 16%;">Buying</th>
+          <th style="width: 16%;">Selling</th>
+          <th style="width: 16%;">T-Buying</th>
+          <th style="width: 16%;">T-Selling</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for currency in currencies %}
+          <tr style="font-size: small; width: 50%; border-collapse: collapse;">
+            <td style="width: 5%; text-align: center;">{{ currency }}</td>
+            <td><input type="number" name="buying_rate_{{ currency }}" step="0.0001" class="form-control" style="width: 100%;"></td>
+            <td><input type="number" name="selling_rate_{{ currency }}" step="0.0001" class="form-control" style="width: 100%;"></td>
+            <td><input type="number" name="transactional_buying_rate_{{ currency }}" step="0.0001" class="form-control" style="width: 100%;"></td>
+            <td><input type="number" name="transactional_selling_rate_{{ currency }}" step="0.0001" class="form-control" style="width: 100%;"></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary justify-item-center" style="font-size: large; padding: 10px; align-items: center; margin-top: 20px;">Update Rates</button>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('exchange-rate-form');
+  let clickedInput; // Variable to store the clicked input element
+
+  // Handle input pasting
+  document.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('paste', handlePaste);
+    input.addEventListener('click', (clickEvent) => {
+      clickedInput = clickEvent.target; // Store the clicked input element
+    });
+  });
+
+  // Clear all input fields when the form is loaded
+  clearInputs();
+
+  // Handle form submission
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    const filteredData = new FormData();
+
+    // Filter out empty fields
+    formData.forEach((value, key) => {
+      if (value.trim() !== '') {
+        filteredData.append(key, value);
+      }
+    });
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: filteredData,
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok.');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        showAlert('success', 'Exchange rates updated successfully!');
+        clearInputs();
+        form.reset(); // Clear the entire form data
+      } else {
+        showAlert('error', 'There was an error updating the exchange rates.');
+      }
+    } catch (error) {
+      showAlert('error', 'There was an error updating the exchange rates.');
+    }
+  });
+
+  function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.textContent = message;
+    form.insertAdjacentElement('beforebegin', alertDiv);
+    setTimeout(() => alertDiv.remove(), 5000); // Remove alert after 5 seconds
+  }
+
+  function clearInputs() {
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+      input.value = '';
+    });
+  }
+
+  function handlePaste(event) {
+    event.preventDefault();
+    const pasteData = (event.clipboardData || window.clipboardData).getData('text');
+    let values = pasteData.split(/\s+/).filter(value => value.trim() !== ''); // Filter out empty strings
+
+    if (!clickedInput) { // Check if clicked input is set
+      return;
+    }
+
+    let currentInput = clickedInput; // Start pasting from the clicked input
+    values.forEach((value, index) => {
+      if (currentInput) {
+        currentInput.value = value; // Paste value into the current input
+        currentInput = getNextInput(currentInput); // Then move to the next input
+      }
+    });
+
+    // Reset clickedInput after pasting is done
+    clickedInput = null;
+  }
+
+  function getNextInput(currentInput) {
+    const inputs = Array.from(document.querySelectorAll('input[type="number"]'));
+    const currentIndex = inputs.indexOf(currentInput);
+    // Return the next input for subsequent values
+    return inputs[currentIndex + 1] || null;
+  }
+});
+</script>
+</div>
+</body>
+</html>

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,13 +22,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-ghoyj#+k3s(h=ow(jl5@ut9k4b@9)*^w6vo#2zx+a*@-0i!_z)'
+EXCHANGE_RATE_API_TOKEN = '#m)mq6b^f&1e0s8i=5)5_!loq#)_xbp1ac1j7r0wdu*1#rbm'
+API_KEY = EXCHANGE_RATE_API_TOKEN
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["*"]
-
-CORS_ALLOW_ALL_ORIGINS = True
+ALLOWED_HOSTS = ["https://ab3nx.pythonanywhere.com","ab3nx.pythonanywhere.com", "https://et-xchange.netlify.app", "https://ethioforex.netlify.app", "https://ethio-forex.top" , "http://localhost:3000"]
 
 # Application definition
 
@@ -44,8 +45,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'exchange_rate_app.middleware.APIKeyMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -76,16 +78,36 @@ WSGI_APPLICATION = 'exchange_rate_app.wsgi.application'
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
+    'https://et-xchange.netlify.app',
+    'https://ethio-forex.top',
+    'https://ethioforex.netlify.app',
+    'https://ab3nx.pythonanywhere.com',
 ]
 
+CORS_ALLOW_CREDENTIALS = True
 
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-api-key',
+]
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+# Mysql database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'Ab3nX$EthioForeX',
+        'USER': 'Ab3nX',
+        'PASSWORD': 'A0911153643a',
+        'HOST': 'Ab3nX.mysql.pythonanywhere-services.com',
+        'PORT': '3306',
     }
 }
 
@@ -120,7 +142,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'
 
 USE_I18N = True
 

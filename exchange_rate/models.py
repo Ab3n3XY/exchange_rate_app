@@ -9,7 +9,7 @@ class Bank(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 class ExchangeRate(models.Model):
     bank = models.ForeignKey(Bank, on_delete=models.CASCADE, related_name='exchange_rates', default=1)
     currency = models.CharField(max_length=10)
@@ -20,5 +20,27 @@ class ExchangeRate(models.Model):
     date = models.DateField(default=datetime.date.today)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['bank', 'currency', 'date']),
+        ]
+
     def __str__(self):
         return f"{self.currency} ({self.bank.name}) - Buying: {self.buying_rate}, Selling: {self.selling_rate}"
+
+class Fuel(models.Model):
+    FUEL_CHOICES = [
+        ('ቤንዚን', 'ቤንዚን (Benzine)'),
+        ('ናፍጣ', 'ናፍጣ (Naphtha)'),
+        ('ኬሮሲን', 'ኬሮሲን (Kerosene)'),
+        ('የአውሮፕላን ነዳጅ', 'የአውሮፕላን ነዳጅ (Aviation Fuel)'),
+        ('ቀላል ጥቁር ናፍጣ', 'ቀላል ጥቁር ናፍጣ (Light Black Naphtha)'),
+        ('ከባድ ጥቁር ናፍጣ', 'ከባድ ጥቁር ናፍጣ (Heavy Black Naphtha)'),
+    ]
+
+    name = models.CharField(max_length=50, choices=FUEL_CHOICES)
+    value = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateField()
+
+    def __str__(self):
+        return f"{self.name} - {self.value} on {self.date}"

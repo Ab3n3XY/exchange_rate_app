@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Exchange Rates</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Base styles */
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #222; /* Dark background */
+            color: #ddd; /* Light text color */
+        }
+
+        header {
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        label {
+            margin: 5px 0;
+            font-size: 1.2em;
+        }
+
+        input[type="date"] {
+            padding: 10px;
+            border: 2px solid #555; /* Dark border */
+            border-radius: 5px;
+            background-color: #333; /* Slightly lighter background */
+            color: #ddd; /* Light text color */
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #4CAF50; /* Green border on focus */
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50; /* Green button color */
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        button:hover {
+            background-color: #3e8e41; /* Darker green on hover */
+        }
+
+        #response-message {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Mobile responsiveness */
+        @media only screen and (max-width: 600px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            form {
+                flex-wrap: wrap;
+            }
+
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Update Exchange Rates</h1>
+    </header>
+
+    <form id="fetch-form" method="post" action="{% url 'fetch_exchange_rates' %}">
+        {% csrf_token %}
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date">
+        <button type="submit">Fetch Exchange Rates</button>
+    </form>
+
+    <div id="response-message"></div>
+
+    <script>
+        $(document).ready(function(){
+            $('#fetch-form').on('submit', function(event){
+                event.preventDefault(); // Prevent the default form submission
+
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response){
+                        $('#response-message').text(response.message);
+                    },
+                    error: function(){
+                        $('#response-message').text('An error occurred.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
